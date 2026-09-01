@@ -2,8 +2,6 @@ name: FEHM APK Oluştur
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
@@ -25,14 +23,32 @@ jobs:
       - name: Android SDK 35 kur
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: FEHM paketini aç
+        run: |
+          echo "Repo içeriği:"
+          ls -la
+
+          ZIP_FILE=$(find . -maxdepth 1 -name "FEHM*.zip" -type f | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "HATA: FEHM ZIP dosyası bulunamadı."
+            exit 1
+          fi
+
+          echo "Bulunan paket: $ZIP_FILE"
+          mkdir -p fehm_build
+          unzip -q "$ZIP_FILE" -d fehm_build
+
+          echo "ZIP açıldı."
+          find fehm_build -maxdepth 3 -type f | sort | head -100
+
       - name: APK oluştur
         run: |
-          BUILD_SCRIPT=$(find . -name "build.sh" -type f | head -n 1)
+          BUILD_SCRIPT=$(find fehm_build -name "build.sh" -type f | head -n 1)
 
           if [ -z "$BUILD_SCRIPT" ]; then
-            echo "HATA: build.sh bulunamadı."
-            echo "Repo içeriği:"
-            find . -maxdepth 3 -type f | sort
+            echo "HATA: ZIP içinde build.sh bulunamadı."
+            find fehm_build -maxdepth 4 -type f | sort
             exit 1
           fi
 
@@ -48,5 +64,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FEHM-v1.0.0-APK
-          path: "**/output/*.apk"
+          path: "fehm_build/**/output/*.apk"
           if-no-files-found: error
