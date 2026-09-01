@@ -10,25 +10,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Kaynakları al
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
 
       - name: Android SDK 35 kur
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: APK oluştur
         run: |
-          cd FEHM-v1.0.0-TAM-EGITIM-SISTEMI
+          BUILD_SCRIPT=$(find . -name "build.sh" -type f | head -n 1)
+
+          if [ -z "$BUILD_SCRIPT" ]; then
+            echo "HATA: build.sh bulunamadı."
+            echo "Repo içeriği:"
+            find . -maxdepth 3 -type f | sort
+            exit 1
+          fi
+
+          echo "Bulunan build.sh: $BUILD_SCRIPT"
+
+          BUILD_DIR=$(dirname "$BUILD_SCRIPT")
+          cd "$BUILD_DIR"
+
           chmod +x build.sh
           ./build.sh
 
-      - uses: actions/upload-artifact@v4
+      - name: APK'yı indirilebilir hale getir
+        uses: actions/upload-artifact@v4
         with:
           name: FEHM-v1.0.0-APK
-          path: FEHM-v1.0.0-TAM-EGITIM-SISTEMI/output/*.apk
+          path: "**/output/*.apk"
+          if-no-files-found: error
