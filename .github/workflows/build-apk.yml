@@ -23,9 +23,12 @@ jobs:
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: APK oluştur
-        run: chmod +x build.sh && ./build.sh
+        run: |
+          cd FEHM-v1.0.0-TAM-EGITIM-SISTEMI
+          chmod +x build.sh
+          ./build.sh
 
       - uses: actions/upload-artifact@v4
         with:
           name: FEHM-v1.0.0-APK
-          path: output/*.apk
+          path: FEHM-v1.0.0-TAM-EGITIM-SISTEMI/output/*.apk
